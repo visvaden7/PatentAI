@@ -172,6 +172,7 @@ def test():
                     claim claim's number : briefly explained document.
                     [output format end]
                    """
+
         # You are a good patent attorney.
         # you must not delete a claim.
         # you must briefly and easily explain each claim of patent.
