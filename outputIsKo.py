@@ -37,16 +37,19 @@ KIPRIS_API_KEY = os.environ.get("KIPRIS_API_KEY")
 
 MAX_TOKEN = 3800
 
+modelName = 'text-davinci-003'
 
+
+# TODO: 모델전환 기능 추가
 def model_toggle():
     modelValue = 0
-    modelName = 'gpt-turbo-3.5'
+    global modelName
     if modelValue == 0:
         modelValue += 1
-        modelName = 'text-davinci-003'
+        modelName = 'gpt-turbo-3.5'
     elif modelValue == 1:
         modelValue -= 1
-        modelName = 'gpt-turbo-3.5'
+        modelName = 'text-davinci-003'
     return modelName
 
 
@@ -72,13 +75,25 @@ def test():
                 print(claim)
                 independentClaims.append(claim)
 
-        # 원문 넣기
+        # TODO: 기존 문장의 내용 초기화하기
+
+        # TODO: 원문 모두 넣기
+        origianlText.config(state=tk.NORMAL)
+        # for item in independentClaims:
+        #     origianlText.insert(tk.END, f'{item}\n\n')
+        origianlText.insert(tk.END, f'{independentClaims[0]}\n\n')
+        origianlText.config(state=tk.DISABLED)
 
         translatedClaims = papago.translate(independentClaims, 'ko', 'en')
         # translatedClaims = papago.translatedTexts = papago.translate(papago.translate(independentClaims, 'ko', 'ja'), 'ja', 'en')
         # translatedClaims = papago.translate(papago.translate(independentClaims, 'ko', 'zh-CN'), 'zh-CN', 'en')
 
-        # 세번째 번역된 내용 집어넣기 unfinished
+        # TODO: 세번째 번역된 내용 모두 집어넣기
+        translatedText.config(state=tk.NORMAL)
+        # for item in translatedClaims:
+        #     translatedText.insert(tk.END, f'{item}\n\n')
+        translatedText.insert(tk.END, f'{translatedClaims[0]}\n\n')
+        translatedText.config(state=tk.DISABLED)
 
         # llm model에 들어갈 컨텐츠
         forGPTContent = ''
@@ -114,14 +129,25 @@ def test():
         chain = LLMChain(llm=llm, prompt=prompt)
 
         # GPT 값 출력하기
-        answer = chain.predict(content=forGPTContent)
+        answer = chain.predict(content=texts)
 
         AnswerList = []
 
-        for item in answer.split('Claim'):
+        for item in answer.split('claim'):
             AnswerList.append(item)
 
-        # 요약본 추가하기 unfinished
+        AnswerList.pop(0)
+
+        print(answer)
+        print(AnswerList)
+        print(len(AnswerList))
+
+        # TODO:요약본 모두 넣기
+        summaryText.config(state=tk.NORMAL)
+        # for item in AnswerList:
+        #     summaryText.insert(tk.END, f'{item}\n\n')
+        summaryText.insert(tk.END, f'{AnswerList[0]}\n\n')
+        summaryText.config(state=tk.DISABLED)
 
     except:
         statusLabel.config(text='정확한 번호를 입력 해주세요')
@@ -141,7 +167,7 @@ Entry.pack()
 # 특허데이터 검색 및 요약 버튼
 # 검색창 및 버튼구역
 searchFrame = tk.LabelFrame(window, padx=0, pady=5)
-searchFrame.pack() # 라인 제거 unfinished
+searchFrame.pack()  # 라인 제거 unfinished
 
 # 검색 및 모델전환버튼
 searchApplicationNoBtn = ttk.Button(searchFrame, bootstyle='dark', width=29, text='특허 청구항 검색', command=test)
@@ -154,21 +180,30 @@ statusLabel = tk.Label(window, text='출원번호 혹은 등록번호를 입력�
 statusLabel.pack()
 
 # 요약문 구역
-summaryFrame = tk.LabelFrame(window, text="청구항 요약문", width=1870, height=300, padx=2, pady=2)
-summaryFrame.pack()
+summaryFrame = tk.LabelFrame(window, text="청구항 요약문", width=1870, height=250, padx=2, pady=2, relief='solid')
+summaryFrame.pack(fill=tk.X, padx=25, pady=15)
+summaryText = tk.Text(summaryFrame, wrap=tk.WORD, spacing2=15, height=12, font=('Pretendard', 12), padx=10, pady=5,
+                      state=tk.DISABLED)
+summaryText.pack(fill=tk.BOTH, padx=2, pady=2)
 
 # 본문 구역
-origianlFrame = tk.LabelFrame(window, text="청구항 원문", width=1870, height=300, padx=2, pady=2)
-origianlFrame.pack()
+origianlFrame = tk.LabelFrame(window, text="청구항 원문", width=1870, height=250, padx=2, pady=2, relief='solid')
+origianlFrame.pack(fill=tk.X, padx=25, pady=15)
+origianlText = tk.Text(origianlFrame, wrap=tk.WORD, spacing2=15, height=12, font=('Pretendard', 12), padx=5,
+                       pady=10, state=tk.DISABLED)
+origianlText.pack(fill=tk.BOTH, padx=2, pady=2)
 
 # 번역문 구역
-translatedFrame = tk.LabelFrame(window, text="청구항 번역문", width=1870, height=300, padx=2, pady=2)
-translatedFrame.pack()
+translatedFrame = tk.LabelFrame(window, text="청구항 번역문", width=1870, height=250, padx=2, pady=2, relief='solid')
+translatedFrame.pack(fill=tk.X, padx=25, pady=15)
+translatedText = tk.Text(translatedFrame, wrap=tk.WORD, spacing2=15, height=12, font=('Pretendard', 12), padx=5,
+                         pady=10, state=tk.DISABLED)
+translatedText.pack(fill=tk.BOTH, padx=2, pady=2)
 
-#스크롤바 세팅
-scrollbar = tk.Scrollbar(summaryFrame, relief='flat', orient=VERTICAL)
-# scrollbar.pack(side=tk.RIGHT) unfinished
-
+# 스크롤바 세팅
+scrollbar = tk.Scrollbar(summaryText, relief='flat', orient=VERTICAL)
+# TODO: 스크롤바 세팅
+# scrollbar.pack(side=tk.RIGHT, fill=tk.BOTH)
 
 # frame.pack(side="left", fill="both", expand=True)
 window.mainloop()
