@@ -10,12 +10,8 @@ from langchain.chat_models import ChatOpenAI
 # .env
 from dotenv import load_dotenv
 import os
-# api 관련 모듈
-import requests
-import xmltodict
-import json
+
 # 번역 모듈
-import googletrans
 import papago
 
 import getKiprisPatent as kipris
@@ -38,22 +34,24 @@ KIPRIS_API_KEY = os.environ.get("KIPRIS_API_KEY")
 MAX_TOKEN = 3800
 
 modelName = 'text-davinci-003'
+modelValue = 0
 
 
-# TODO: 모델전환 기능 추가
 def model_toggle():
-    modelValue = 0
+    global modelValue
     global modelName
     if modelValue == 0:
         modelValue += 1
-        modelName = 'gpt-turbo-3.5'
+        modelName = 'gpt-3.5-turbo'
     elif modelValue == 1:
         modelValue -= 1
         modelName = 'text-davinci-003'
-    return modelName
+    print(modelName)
+    toggleBtn.config(text=f'모델 변환({modelName})')
 
 
 def test():
+    global modelName
     inputNumber = Entry.get()  # 출원번호 : 1020230008327 , 등록번호 : 1025569250000
     statusLabel.config(text="출원번호 혹은 등록번호 입력해주세요!")
     try:
@@ -75,10 +73,9 @@ def test():
                 print(claim)
                 independentClaims.append(claim)
 
-        # TODO: 기존 문장의 내용 초기화하기
-
-        # TODO: 원문 모두 넣기
+        # 원문 초기화 및 입력
         origianlText.config(state=tk.NORMAL)
+        origianlText.delete('1.0', tk.END)
         # for item in independentClaims:
         #     origianlText.insert(tk.END, f'{item}\n\n')
         origianlText.insert(tk.END, f'{independentClaims[0]}\n\n')
@@ -88,8 +85,9 @@ def test():
         # translatedClaims = papago.translatedTexts = papago.translate(papago.translate(independentClaims, 'ko', 'ja'), 'ja', 'en')
         # translatedClaims = papago.translate(papago.translate(independentClaims, 'ko', 'zh-CN'), 'zh-CN', 'en')
 
-        # TODO: 세번째 번역된 내용 모두 집어넣기
+        # 번역된 내용 초기화 및 입력
         translatedText.config(state=tk.NORMAL)
+        translatedText.delete('1.0', tk.END)
         # for item in translatedClaims:
         #     translatedText.insert(tk.END, f'{item}\n\n')
         translatedText.insert(tk.END, f'{translatedClaims[0]}\n\n')
@@ -123,27 +121,25 @@ def test():
                            """
 
         # llm 모델 세팅하기
-        llm = OpenAI(openai_api_key=OPENAI_API_KEY, temperature=0, model_name='gpt-3.5-turbo')
-        # llm = OpenAI(openai_api_key=OPENAI_API_KEY, temperature=0, model_name='text-davinci-003')
+        llm = OpenAI(openai_api_key=OPENAI_API_KEY, temperature=0, model_name=modelName)
+        print(f'모델명 : {modelName}')
         prompt = PromptTemplate.from_template(template=template)
         chain = LLMChain(llm=llm, prompt=prompt)
 
         # GPT 값 출력하기
         answer = chain.predict(content=texts)
 
+        # 클레임 기준으로 청구항 구별
         AnswerList = []
-
         for item in answer.split('claim'):
             AnswerList.append(item)
 
+        # 첫번째 빈 데이터 삭제
         AnswerList.pop(0)
 
-        print(answer)
-        print(AnswerList)
-        print(len(AnswerList))
-
-        # TODO:요약본 모두 넣기
+        # 요약본 초기화 및 입력
         summaryText.config(state=tk.NORMAL)
+        summaryText.delete('1.0', tk.END)
         # for item in AnswerList:
         #     summaryText.insert(tk.END, f'{item}\n\n')
         summaryText.insert(tk.END, f'{AnswerList[0]}\n\n')
@@ -166,13 +162,14 @@ Entry.pack()
 
 # 특허데이터 검색 및 요약 버튼
 # 검색창 및 버튼구역
-searchFrame = tk.LabelFrame(window, padx=0, pady=5)
-searchFrame.pack()  # 라인 제거 unfinished
+searchFrame = tk.LabelFrame(window, padx=0, pady=0)
+searchFrame.pack()
 
 # 검색 및 모델전환버튼
-searchApplicationNoBtn = ttk.Button(searchFrame, bootstyle='dark', width=29, text='특허 청구항 검색', command=test)
+searchApplicationNoBtn = ttk.Button(searchFrame, bootstyle='dark-outline', width=28, text='특허 청구항 검색', command=test)
 searchApplicationNoBtn.pack(side=LEFT)
-toggleBtn = ttk.Button(searchFrame, bootstyle='dark', width=29, text='모델전환', command='')
+toggleBtn = ttk.Button(searchFrame, bootstyle='dark-outline', width=27, text=f'모델 변환({modelName})',
+                       command=model_toggle)
 toggleBtn.pack(side=LEFT)
 
 # 상태정보 표시
@@ -200,10 +197,8 @@ translatedText = tk.Text(translatedFrame, wrap=tk.WORD, spacing2=15, height=12, 
                          pady=10, state=tk.DISABLED)
 translatedText.pack(fill=tk.BOTH, padx=2, pady=2)
 
-# 스크롤바 세팅
-scrollbar = tk.Scrollbar(summaryText, relief='flat', orient=VERTICAL)
 # TODO: 스크롤바 세팅
+scrollbar = tk.Scrollbar(summaryText, relief='flat', orient=VERTICAL)
 # scrollbar.pack(side=tk.RIGHT, fill=tk.BOTH)
 
-# frame.pack(side="left", fill="both", expand=True)
 window.mainloop()
