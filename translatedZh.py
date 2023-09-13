@@ -111,8 +111,8 @@ def test():
                             [start of task intruction]
                             - only follow the output format defiend
                             - don't delete a claim in Document
+                            - don't add and divide a claim in Document
                             - Briefly and Easily explain each claim in Document
-                            - output language is korean
                             [end of task instruction]
 
                             [output format start]
@@ -132,10 +132,13 @@ def test():
         # 클레임 기준으로 청구항 구별
         AnswerList = []
         for item in answer.split('claim'):
-            AnswerList.append(item)
+            AnswerList.append(papago.translate(item, 'en', 'ko'))
 
-        # 첫번째 빈 데이터 삭제
-        AnswerList.pop(0)
+        # TODO: 첫번째 빈 데이터 삭제 -> pop() 대신 REMOVE()로 변경
+        for item in AnswerList:
+            if item.find(':') == -1:
+                print(item.find(':'))
+                AnswerList.remove(item)
 
         # 요약본 초기화 및 입력
         summaryText.config(state=tk.NORMAL)
