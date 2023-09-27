@@ -49,6 +49,10 @@ def model_toggle():
     print(modelName)
     toggleBtn.config(text=f'모델 변환({modelName})')
 
+def testNum():
+    inputNumber = 1020180128486
+    result = kipris.testClassifyInputNum(inputNumber)
+    print(result)
 
 def test():
     global modelName
@@ -58,11 +62,22 @@ def test():
         # kipris data 가져오기
         result = kipris.getKiprisData(inputNumber)
 
+        # 특허명
+        inventionTitle = kipris.getInventionTitle(result)
+
         # 공고전문 / 공개전문 여부 확인하기
         publicationStatus = kipris.getPublicationStatus(result)
-        statusLabel.config(text=publicationStatus)
 
-        inventionTitle = kipris.getInventionTitle(result)
+        # 특허번호 / 등록번호
+        applicationNum = kipris.getPatentNumber(result).get('applicationNum')
+        registerNum = kipris.getPatentNumber(result).get('registerNum')
+
+        # 해당 특허에 대한 정보 입력
+        statusText = f'특허명 : {inventionTitle},    출원번호 : {applicationNum},    등록번호 : {registerNum},    공고상태 : {publicationStatus}'
+
+        print(statusText)
+        statusLabel.config(text=statusText)
+
         claimContents = kipris.getClaimContent(result)
 
         independentClaims = []
@@ -134,12 +149,13 @@ def test():
         for item in answer.split('claim'):
             AnswerList.append(papago.translate(item, 'en', 'ko'))
 
-        # TODO: 첫번째 빈 데이터 삭제 -> pop() 대신 REMOVE()로 변경
+        # TODO: 빈 데이터 삭제 REMOVE()로 변경
         for item in AnswerList:
             if item.find(':') == -1:
                 print(item.find(':'))
                 AnswerList.remove(item)
 
+        # TODO: 청구항 순서 안맞을 경우, 다시 재시작!!
         # 요약본 초기화 및 입력
         summaryText.config(state=tk.NORMAL)
         summaryText.delete('1.0', tk.END)

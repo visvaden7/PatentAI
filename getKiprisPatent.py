@@ -15,6 +15,20 @@ KIPRIS_API_KEY = os.environ.get("KIPRIS_API_KEY")
 
 
 # 출원번호, 등록번호를 입력할 때, 출원번호를 얻는 함수
+
+def testClassifyInputNum(inputNumber):
+    if inputNumber != '':
+        applicationUrl = f'http://plus.kipris.or.kr/openapi/rest/patUtiModInfoSearchSevice/applicationNumberSearchInfo?applicationNumber={inputNumber}&docsStart=1&accessKey={KIPRIS_API_KEY}'
+        response = requests.get(applicationUrl)
+        content = response.text
+        result = xmltodict.parse(content)
+        print(result)
+        openingNumber = result['response']['body']['items']['PatentUtilityInfo']['OpeningNumber']
+        check = openingNumber == inputNumber
+        print(check)
+        # TODO: 공개번호를 입력할 시 어떻게 하지?       return inputNumber
+
+
 def classifyInputNum(inputNumber):
     if inputNumber != '':
         try:
@@ -26,7 +40,7 @@ def classifyInputNum(inputNumber):
             print("공고전문")
             # print(result)
             return applicationNum
-        except Exception as ex:
+        except:
             return inputNumber
     else:
         return 0
@@ -50,6 +64,21 @@ def getKiprisData(inputNumber):
     except Exception as ex:
         print(ex)
         return ""
+
+
+def getPatentNumber(result):
+    # 출원번호와 등록번호를 구해서 리턴해야 한다.
+    applicationNum = result['response']['body']['item']['biblioSummaryInfoArray']['biblioSummaryInfo'][
+        'applicationNumber']
+    if applicationNum is not None:
+        applicationNum = "".join(applicationNum.split("-"))
+    applicationNum = applicationNum if applicationNum is not None else '-'
+    registerNumber = result['response']['body']['item']['biblioSummaryInfoArray']['biblioSummaryInfo']['registerNumber']
+    if registerNumber is not None:
+        registerNumber = "".join(registerNumber.split("-"))
+    registerNumber = registerNumber if registerNumber is not None else '-'
+    numberList = {'applicationNum': applicationNum, 'registerNum': registerNumber, }
+    return numberList
 
 
 # 특허 공개전문/ 공고전문인지 확인하는 함수
